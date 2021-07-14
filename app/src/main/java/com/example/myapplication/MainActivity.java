@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements RvHolder.ClickLis
 
     private CardView bottomSeet;
     private BottomSheetBehavior bottomSheetBehavior;
+    private SqlManager sqlManager = new SqlManager(this) ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,8 +65,10 @@ public class MainActivity extends AppCompatActivity implements RvHolder.ClickLis
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSeet);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
+        
         getdata();
 
+        sqlManager.getData();
         tasksRV.setLayoutManager(new LinearLayoutManager(this));
         doneRV.setLayoutManager(new LinearLayoutManager(this));
         taskAdapter = new RvAdapter(tasks, this);
@@ -120,11 +123,15 @@ public class MainActivity extends AppCompatActivity implements RvHolder.ClickLis
                 if (task.matches("^(?=.{3,25}$)(?![_.])(?!.*[_.]{2})[\\u0600-\\u06FF a-zA-Z0-9._]+(?<![_.])$")) {
                     Task t = new Task(task, (add.matches("")) ? "" : add);
                     tasks.add(t);
-                    SharePreferenceManager.addToSharePreference(t, MainActivity.this);
+
+                    sqlManager.insert(t);
+                    
+//                    SharePreferenceManager.addToSharePreference(t, MainActivity.this);
                     edtTask.setText("");
                     edtAdd.setText("");
                     hideKeyBoard(MainActivity.this);
                     taskAdapter.notifyDataSetChanged();
+
                     final Handler handler = new Handler();
                     handler.postDelayed(new Runnable() {
                         @Override
@@ -149,12 +156,20 @@ public class MainActivity extends AppCompatActivity implements RvHolder.ClickLis
     private void getdata() {
         tasks.clear();
         done.clear();
-        List<Task> fromshare = SharePreferenceManager.getFromSharePreference(this);
-        for (Task t :
-                fromshare) {
-            if (t.isDone())
-                done.add(t);
-            else tasks.add(t);
+//        List<Task> fromshare = SharePreferenceManager.getFromSharePreference(this);
+
+//        for (Task t :
+//                fromshare) {
+//            if (t.isDone())
+//                done.add(t);
+//            else tasks.add(t);
+//        }
+        List<Task> l = sqlManager.getData() ;
+        for (Task temp :
+                l) {
+            if (temp.isDone())
+                done.add(temp);
+            else tasks.add(temp);
         }
         if (done.size()!=0) txtDone.setVisibility(View.VISIBLE); else  txtDone.setVisibility(View.GONE);
         if (tasks.size()==0) txtDone.setText("All Done :"); else  txtDone.setText("Done");
@@ -170,10 +185,12 @@ public class MainActivity extends AppCompatActivity implements RvHolder.ClickLis
     public void onCheckedChange(int position, boolean isChecked) {
         if (isChecked) {
             tasks.get(position).setDone(true);
-            SharePreferenceManager.updateSharePreference(tasks.get(position), this);
+//            SharePreferenceManager.updateSharePreference(tasks.get(position), this);
+            sqlManager.update(tasks.get(position));
         } else {
             done.get(position).setDone(false);
-            SharePreferenceManager.updateSharePreference(done.get(position), this);
+//            SharePreferenceManager.updateSharePreference(done.get(position), this);
+            sqlManager.update(done.get(position));
         }
         getdata();
         doneAdapter.notifyDataSetChanged();
@@ -190,5 +207,11 @@ public class MainActivity extends AppCompatActivity implements RvHolder.ClickLis
     @Override
     public void onLongClick() {
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        sqlManager.close();
+        super.onDestroy();
     }
 }
