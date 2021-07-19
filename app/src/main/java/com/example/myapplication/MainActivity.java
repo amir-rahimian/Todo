@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements RvHolder.ClickLis
         
         getdata();
 
-        sqlManager.getData();
         tasksRV.setLayoutManager(new LinearLayoutManager(this));
         doneRV.setLayoutManager(new LinearLayoutManager(this));
         taskAdapter = new RvAdapter(tasks, this);
@@ -127,6 +126,7 @@ public class MainActivity extends AppCompatActivity implements RvHolder.ClickLis
                     sqlManager.insert(t);
                     
 //                    SharePreferenceManager.addToSharePreference(t, MainActivity.this);
+
                     edtTask.setText("");
                     edtAdd.setText("");
                     hideKeyBoard(MainActivity.this);
@@ -156,14 +156,15 @@ public class MainActivity extends AppCompatActivity implements RvHolder.ClickLis
     private void getdata() {
         tasks.clear();
         done.clear();
-//        List<Task> fromshare = SharePreferenceManager.getFromSharePreference(this);
 
+//        List<Task> fromshare = SharePreferenceManager.getFromSharePreference(this);
 //        for (Task t :
 //                fromshare) {
 //            if (t.isDone())
 //                done.add(t);
 //            else tasks.add(t);
 //        }
+
         List<Task> l = sqlManager.getData() ;
         for (Task temp :
                 l) {
@@ -192,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements RvHolder.ClickLis
 //            SharePreferenceManager.updateSharePreference(done.get(position), this);
             sqlManager.update(done.get(position));
         }
-        getdata();
+//        getdata();
         doneAdapter.notifyDataSetChanged();
         taskAdapter.notifyDataSetChanged();
 

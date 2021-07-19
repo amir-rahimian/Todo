@@ -28,7 +28,23 @@ final class FeedReaderContract {
 }
 
 
-public  class SqlManager {
+public class SqlManager {
+
+
+    // singleton
+
+    private static SqlManager sqlManager;
+
+    private SqlManager() {
+    }
+
+    public static SqlManager getSqlManager() {
+        if (sqlManager == null)
+            return new SqlManager();
+        else
+            return sqlManager;
+    }
+
     private static final String SQL_CREATE_ENTRIES =
             "CREATE TABLE " + FeedReaderContract.FeedEntry.TABLE_NAME + " (" +
                     FeedReaderContract.FeedEntry._ID + " INTEGER PRIMARY KEY," +
@@ -47,27 +63,30 @@ public  class SqlManager {
         public FeedReaderDbHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
         }
+
         public void onCreate(SQLiteDatabase db) {
             db.execSQL(SQL_CREATE_ENTRIES);
         }
+
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             // This database is only a cache for online data, so its upgrade policy is
             // to simply to discard the data and start over
             db.execSQL(SQL_DELETE_ENTRIES);
             onCreate(db);
         }
+
         public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             onUpgrade(db, oldVersion, newVersion);
         }
     }
 
-    FeedReaderDbHelper dbHelper ;
+    FeedReaderDbHelper dbHelper;
 
-    public SqlManager (Context context){
+    public SqlManager(Context context) {
         this.dbHelper = new FeedReaderDbHelper(context);
     }
 
-    public long insert (Task t){
+    public long insert(Task t) {
         // Gets the data repository in write mode
         SQLiteDatabase db = this.dbHelper.getWritableDatabase();
 
@@ -81,7 +100,7 @@ public  class SqlManager {
         return db.insert(FeedReaderContract.FeedEntry.TABLE_NAME, null, values);
     }
 
-    public List<Task> getData(){
+    public List<Task> getData() {
         SQLiteDatabase db = this.dbHelper.getReadableDatabase();
 
         // Define a projection that specifies which columns from the database
@@ -95,11 +114,12 @@ public  class SqlManager {
 
         // Filter results WHERE "title" = 'My Title'
         String selection = FeedReaderContract.FeedEntry.COLUMN_NAME_TITLE + " = ?";
-        String[] selectionArgs = { "My Title" };
+        String[] selectionArgs = {"My Title"};
 
         // How you want the results sorted in the resulting Cursor
         String sortOrder =
-                FeedReaderContract.FeedEntry.COLUMN_NAME_SUBTITLE + " DESC";
+                FeedReaderContract.FeedEntry._ID + " ASC";
+        //DESC
 
         Cursor cursor = db.query(
                 FeedReaderContract.FeedEntry.TABLE_NAME,   // The table to query
@@ -110,35 +130,36 @@ public  class SqlManager {
                 null,                   // don't filter by row groups
                 sortOrder               // The sort order
         );
+
         List<Task> itemIds = new ArrayList<>();
-        while(cursor.moveToNext()) {
+        while (cursor.moveToNext()) {
             String title = cursor.getString(
                     cursor.getColumnIndexOrThrow(FeedReaderContract.FeedEntry.COLUMN_NAME_TITLE));
             String subTitle = cursor.getString(
                     cursor.getColumnIndexOrThrow(FeedReaderContract.FeedEntry.COLUMN_NAME_SUBTITLE));
             boolean is_checked = cursor.getInt(
-                    cursor.getColumnIndexOrThrow(FeedReaderContract.FeedEntry.COLUMN_IS_CHECKED))!=0;
-            Task task  = new Task(title , subTitle );
+                    cursor.getColumnIndexOrThrow(FeedReaderContract.FeedEntry.COLUMN_IS_CHECKED)) != 0;
+            Task task = new Task(title, subTitle);
             task.setDone(is_checked);
             itemIds.add(task);
         }
         cursor.close();
 
-        return itemIds ;
+        return itemIds;
     }
 
-    public int delete (Task t){
+    public int delete(Task t) {
         SQLiteDatabase db = this.dbHelper.getReadableDatabase();
 
         // Define 'where' part of query.
         String selection = FeedReaderContract.FeedEntry.COLUMN_NAME_TITLE + " LIKE ?";
         // Specify arguments in placeholder order.
-        String[] selectionArgs = { "MyTitle" };
+        String[] selectionArgs = {"MyTitle"};
         // Issue SQL statement.
         return db.delete(FeedReaderContract.FeedEntry.TABLE_NAME, selection, selectionArgs);
     }
 
-    public int update (Task t ){
+    public int update(Task t) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         // New value for one column
@@ -149,7 +170,7 @@ public  class SqlManager {
 
         // Which row to update, based on the title
         String selection = FeedReaderContract.FeedEntry.COLUMN_NAME_TITLE + " LIKE ?";
-        String[] selectionArgs = { t.getTitle() };
+        String[] selectionArgs = {t.getTitle()};
 
         return db.update(
                 FeedReaderContract.FeedEntry.TABLE_NAME,
@@ -158,7 +179,7 @@ public  class SqlManager {
                 selectionArgs);
     }
 
-    public void close (){
+    public void close() {
         dbHelper.close();
     }
 
