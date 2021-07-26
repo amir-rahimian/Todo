@@ -31,19 +31,6 @@ final class FeedReaderContract {
 public class SqlManager {
 
 
-    // singleton
-
-    private static SqlManager sqlManager;
-
-    private SqlManager() {
-    }
-
-    public static SqlManager getSqlManager() {
-        if (sqlManager == null)
-            return new SqlManager();
-        else
-            return sqlManager;
-    }
 
     private static final String SQL_CREATE_ENTRIES =
             "CREATE TABLE " + FeedReaderContract.FeedEntry.TABLE_NAME + " (" +
@@ -82,8 +69,20 @@ public class SqlManager {
 
     FeedReaderDbHelper dbHelper;
 
-    public SqlManager(Context context) {
+    // singleton
+
+    private static SqlManager sqlManager;
+
+    private SqlManager(Context context) {
         this.dbHelper = new FeedReaderDbHelper(context);
+
+    }
+
+    public static SqlManager getSqlManager(Context context) {
+        if (sqlManager == null)
+            return new SqlManager(context);
+        else
+            return sqlManager;
     }
 
     public long insert(Task t) {
@@ -152,14 +151,14 @@ public class SqlManager {
         SQLiteDatabase db = this.dbHelper.getReadableDatabase();
 
         // Define 'where' part of query.
-        String selection = FeedReaderContract.FeedEntry.COLUMN_NAME_TITLE + " LIKE ?";
+        String selection = FeedReaderContract.FeedEntry.COLUMN_NAME_SUBTITLE + " LIKE ?";
         // Specify arguments in placeholder order.
-        String[] selectionArgs = {"MyTitle"};
+        String[] selectionArgs = {t.getSubTitle()};
         // Issue SQL statement.
         return db.delete(FeedReaderContract.FeedEntry.TABLE_NAME, selection, selectionArgs);
     }
 
-    public int update(Task t) {
+    public int update(Task oldone , Task t) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         // New value for one column
@@ -169,8 +168,8 @@ public class SqlManager {
         values.put(FeedReaderContract.FeedEntry.COLUMN_IS_CHECKED, t.isDone());
 
         // Which row to update, based on the title
-        String selection = FeedReaderContract.FeedEntry.COLUMN_NAME_TITLE + " LIKE ?";
-        String[] selectionArgs = {t.getTitle()};
+        String selection = FeedReaderContract.FeedEntry.COLUMN_NAME_SUBTITLE + " LIKE ?";
+        String[] selectionArgs = {oldone.getSubTitle()};
 
         return db.update(
                 FeedReaderContract.FeedEntry.TABLE_NAME,

@@ -2,6 +2,7 @@ package com.example.myapplication;
 
 import android.graphics.Paint;
 import android.text.Html;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -53,10 +55,11 @@ public class RvAdapter extends RecyclerView.Adapter<RvHolder> {
 
 }
 
-class RvHolder extends RecyclerView.ViewHolder {
+class RvHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
 
     private TextView  title , subTitle ;
     private CheckBox checkBox ;
+    private CardView cardView ;
     private ClickListener clickListener ;
     public RvHolder(@NonNull @org.jetbrains.annotations.NotNull View itemView,ClickListener clickListener) {
         super(itemView);
@@ -66,6 +69,7 @@ class RvHolder extends RecyclerView.ViewHolder {
         title = itemView.findViewById(R.id.txtTitle);
         subTitle = itemView.findViewById(R.id.txtSubTitle);
         checkBox = itemView.findViewById(R.id.checkBox);
+        cardView = itemView.findViewById(R.id.Card);
 
         checkBox.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -83,6 +87,26 @@ class RvHolder extends RecyclerView.ViewHolder {
                 }
             }
         });
+        cardView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                clickListener.onLongClick(getAdapterPosition(),checkBox.isChecked());
+
+                return false;
+            }
+        });
+        cardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                clickListener.onClick(getAdapterPosition(),checkBox.isChecked());
+            }
+        });
+        itemView.setOnCreateContextMenuListener(this);
+    }
+
+    public CardView getCardView() {
+        return cardView;
     }
 
     public CheckBox getCheckBox() {
@@ -97,9 +121,16 @@ class RvHolder extends RecyclerView.ViewHolder {
         return subTitle;
     }
 
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        menu.setHeaderTitle(title.getText().toString());
+        menu.add(getAdapterPosition(),0,0,"Edit");
+        menu.add(getAdapterPosition(),1,1,"Delete");
+    }
+
     interface ClickListener {
         void onCheckedChange(int postion , boolean isChecked);
-        void onClick();
-        void onLongClick();
+        void onClick(int postion, boolean isChecked);
+        void onLongClick(int postion, boolean isChecked);
     }
 }
